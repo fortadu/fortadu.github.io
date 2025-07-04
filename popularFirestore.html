@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Populando Firestore</title>
+</head>
+
+<body>
+    <h1>Populando Firestore...</h1>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB0FNd2sdqLARe3HfdFNv5yhQpIN9AQZNI",
+            authDomain: "lista-presentes-casament-a314f.firebaseapp.com",
+            projectId: "lista-presentes-casament-a314f",
+            storageBucket: "lista-presentes-casament-a314f.firebasestorage.app",
+            messagingSenderId: "1033690918625",
+            appId: "1:1033690918625:web:4ee69cf465af1cb72391a0"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const presentes = [
+            "Sofá", "Liquidificador", "Cafeteira", "Máquina de lavar", "Air fryer",
+            "Batedeira", "Jogo de panela", "Edredom", "Kit cabides", "2 Travesseiros",
+            "Manta", "Jogo de facas", "Almofadas", "Mixer", "Ferro de passar roupa",
+            "Jogo de taças", "Cobre leito", "Micro-ondas", "Jogo de travessas",
+            "Bacia alumínio", "Pires de sobremesa", "Petisqueira", "Porta mantimentos",
+            "Saladeira", "Trilho de mesa", "Panela elétrica de arroz", "Garrafa térmica",
+            "Toalhas de rosto", "Toalhas de banho", "Prateleiras", "Rack da sala",
+            "Cesto de pão", "Porta chaves", "Espelho", "Fruteira", "Caixa de ferramentas",
+            "Churrasqueira portátil", "Conjunto de roupão"
+        ];
+
+        async function popularFirestore() {
+            for (const nome of presentes) {
+                try {
+                    await addDoc(collection(db, "presentes"), {
+                        nome: nome,
+                        marcado: false
+                    });
+                    console.log(`✅ Presente adicionado: ${nome}`);
+                } catch (e) {
+                    console.error("Erro ao adicionar presente: ", e);
+                }
+            }
+            console.log("✨ Todos os presentes foram adicionados!");
+        }
+
+        popularFirestore();
+    </script>
+</body>
+
+</html>
