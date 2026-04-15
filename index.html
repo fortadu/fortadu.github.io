@@ -14,7 +14,6 @@
     --verde-pastel-escuro: #2bbbad;
     --nude-pastel: #f5f0eb;
     --rosa-pastel: #f2dcdc;
-    --cinza-pastel: #c7c7c7;
 }
 
 body {
@@ -40,6 +39,18 @@ main {
     padding: 10px;
 }
 
+button {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 10px;
+    border: none;
+    background: var(--verde-pastel-escuro);
+    color: white;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
 .presente-item {
     background: var(--nude-pastel);
     margin-bottom: 8px;
@@ -58,16 +69,9 @@ main {
 
 .categoria {
     font-weight: bold;
-    background: transparent;
-    box-shadow: none;
-    cursor: default;
     margin-top: 15px;
 }
 
-.presente-checkbox {
-    width: 20px;
-    height: 20px;
-}
 </style>
 </head>
 
@@ -78,12 +82,16 @@ main {
 </header>
 
 <main>
+
+<button onclick="importarPresentes()">📥 Importar lista (usar só 1 vez)</button>
+
 <ul id="lista-presentes"></ul>
+
 </main>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-import { getFirestore, collection, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot, doc, updateDoc, addDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyB0FNd2sdqLARe3HfdFNv5yhQpIN9AQZNI",
@@ -93,6 +101,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
 const lista = document.getElementById('lista-presentes');
 
 function criarItem(id, nome, marcado, categoria) {
@@ -135,6 +144,45 @@ onSnapshot(collection(db, 'presentes'), (snapshot) => {
         lista.appendChild(criarItem(docSnap.id, d.nome, d.marcado, d.categoria));
     });
 });
+
+window.importarPresentes = async function () {
+
+const presentes = [
+
+{ nome: "🍳 COZINHA", marcado: false, categoria: true },
+
+{ nome: "Jogo de copos", marcado: false },
+{ nome: "Jogo de talheres", marcado: false },
+{ nome: "Faqueiro", marcado: false },
+{ nome: "Espátula para manteiga", marcado: false },
+{ nome: "Panos de prato", marcado: false },
+{ nome: "Formas variadas", marcado: false },
+{ nome: "Porta temperos (sal, pimenta, azeite)", marcado: false },
+{ nome: "Molheira de vidro", marcado: false },
+{ nome: "Tábua de carne", marcado: false },
+{ nome: "Potes de mantimentos", marcado: false },
+
+{ nome: "🚿 BANHEIRO", marcado: false, categoria: true },
+{ nome: "Porta escova de dente", marcado: false },
+{ nome: "Porta sabonete líquido", marcado: false },
+
+{ nome: "🛏️ CAMA, MESA E BANHO", marcado: false, categoria: true },
+{ nome: "Lençol", marcado: false },
+{ nome: "Fronha", marcado: false },
+
+{ nome: "🧺 ÁREA DE SERVIÇO", marcado: false, categoria: true },
+{ nome: "Vassoura", marcado: false },
+{ nome: "Rodo", marcado: false }
+
+];
+
+for (const item of presentes) {
+    await addDoc(collection(db, "presentes"), item);
+}
+
+alert("✅ Lista importada com sucesso!");
+};
+
 </script>
 
 </body>
