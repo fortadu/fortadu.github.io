@@ -39,18 +39,6 @@ main {
     padding: 10px;
 }
 
-button {
-    width: 100%;
-    padding: 12px;
-    margin-bottom: 10px;
-    border: none;
-    background: var(--verde-pastel-escuro);
-    color: white;
-    border-radius: 6px;
-    font-size: 14px;
-    cursor: pointer;
-}
-
 .presente-item {
     background: var(--nude-pastel);
     margin-bottom: 8px;
@@ -82,16 +70,12 @@ button {
 </header>
 
 <main>
-
-<button onclick="importarPresentes()">📥 Importar lista (usar só 1 vez)</button>
-
 <ul id="lista-presentes"></ul>
-
 </main>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-import { getFirestore, collection, onSnapshot, doc, updateDoc, addDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyB0FNd2sdqLARe3HfdFNv5yhQpIN9AQZNI",
@@ -117,26 +101,19 @@ function criarItem(id, nome, marcado, categoria) {
     li.className = 'presente-item';
     if (marcado) li.classList.add('checked');
 
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.checked = marcado;
-
     const span = document.createElement('span');
     span.innerText = nome;
 
-    li.appendChild(checkbox);
     li.appendChild(span);
 
-    li.onclick = async () => {
+    li.addEventListener('click', async () => {
         await updateDoc(doc(db, 'presentes', id), {
-            marcado: !checkbox.checked
+            marcado: !marcado
         });
-    };
+    });
 
     return li;
 }
-
-import { query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
 onSnapshot(query(collection(db, 'presentes'), orderBy('ordem')), (snapshot) => {
     lista.innerHTML = '';
@@ -146,137 +123,6 @@ onSnapshot(query(collection(db, 'presentes'), orderBy('ordem')), (snapshot) => {
         lista.appendChild(criarItem(docSnap.id, d.nome, d.marcado, d.categoria));
     });
 });
-
-window.importarPresentes = async function () {
-
-const lista = [
-"🍳 COZINHA",
-"Jogo de copos",
-"Jogo de talheres (preto, cinza, verde)",
-"Espátula para manteiga",
-"Faqueiro (preto, cinza, verde)",
-"Panos de prato",
-"Formas variadas (pudim, pizza, etc)",
-"Porta queijo ralado",
-"Porta saleiro",
-"Porta pimenteiro",
-"Porta azeite",
-"Molheira de vidro",
-"Tábua de carne",
-"Potes de mantimentos de vidro",
-"Kit potes herméticos",
-"Faca de pão",
-"Conjunto de facas",
-"Descascador",
-"Balança de cozinha",
-"Coqueteleira",
-"Jarra de vidro",
-"Luva térmica",
-"Ralador",
-"Porta tempero",
-"Cortador de pizza",
-"Escorredor de louça de inox",
-"Espátula e colheres de silicone",
-"Colheres de pau",
-"Colheres de inox",
-"Colheres de plástico",
-"Jogo de pratos",
-"Jogo de xícaras",
-"Canecas",
-"Abridor de latas/garrafas",
-"Espremedor de alho",
-"Espremedor de frutas",
-"Panos de copa",
-"Saleiro",
-"Açucareiro",
-"Conjunto de tigelas",
-"Escorredor de massa",
-"Lixeira de cozinha",
-"Fruteira",
-"Coador de café",
-"Coador",
-"Garrafa térmica",
-"Funil",
-"Jogo de taças",
-"Jogo de sobremesa",
-"Marinex",
-"Rolo de massa",
-"Descanso de panela",
-"Tigelas de inox",
-"Jogo americano",
-"Panela de pressão",
-"Kit pia de cozinha",
-"Porta frios",
-"Porta papel toalha",
-"Peneira",
-"Leiteira",
-"Chaleira",
-"Bule",
-"Porta talheres para gaveta",
-"Frigideira",
-"Frigideira para ovos",
-"Concha",
-"Bandeja",
-"Manteigueira",
-"Copo medidor",
-"Porta mantimentos",
-"Porta bolo",
-"Pegador",
-"Escumadeira",
-"Avental",
-"Forma de silicone",
-"Kit de churrasco",
-"Tábua de churrasco",
-"Travessas e refratários de vidro",
-
-"🚿 BANHEIRO",
-"Porta escova de dente",
-"Porta sabonete líquido",
-"Tapete de banheiro",
-"Lixeira de banheiro",
-"Escova para vaso",
-
-"🛏️ CAMA, MESA E BANHO",
-"Lençol",
-"Fronha",
-"Travesseiro",
-"Coberta",
-"Cortina",
-"Toalha de banho",
-"Toalha de rosto",
-"Almofadas",
-"Manta soft",
-
-"🧺 ÁREA DE SERVIÇO",
-"Vassoura",
-"Rodo",
-"Pá de cabo",
-"Prendedor",
-"Varal",
-"Baldes",
-"Porta sabão",
-"Porta prendedor",
-"Pano multiuso",
-"Cesto de roupa",
-"MOP"
-];
-
-let ordem = 0;
-
-for (const item of lista) {
-    ordem++;
-
-    await addDoc(collection(db, "presentes"), {
-        nome: item,
-        marcado: false,
-        categoria: item.includes("🍳") || item.includes("🚿") || item.includes("🛏️") || item.includes("🧺"),
-        ordem: ordem
-    });
-}
-
-alert("✅ Lista organizada corretamente!");
-};
-
 </script>
 
 </body>
