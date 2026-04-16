@@ -76,7 +76,6 @@ ul {
 
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     transition: all 0.2s ease;
-    animation: fadeIn 0.3s ease;
 }
 
 .presente-item:active {
@@ -97,6 +96,10 @@ ul {
     right: 15px;
     font-size: 16px;
     color: var(--primary);
+}
+
+.presente-item.clicked {
+    transform: scale(0.97);
 }
 
 /* Animação */
@@ -155,10 +158,16 @@ function criarItem(id, nome, marcado, categoria) {
     li.innerText = nome;
 
     li.addEventListener('click', async () => {
-        await updateDoc(doc(db, 'presentes', id), {
-            marcado: !marcado
-        });
+    li.classList.add('clicked');
+
+    setTimeout(() => {
+        li.classList.remove('clicked');
+    }, 150);
+
+    await updateDoc(doc(db, 'presentes', id), {
+        marcado: !marcado
     });
+});
 
     return li;
 }
