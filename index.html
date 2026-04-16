@@ -8,35 +8,41 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
 
 <style>
+
 :root {
-    --verde-pastel-claro: #e0f7f5;
-    --verde-pastel: #7edbd3;
-    --verde-pastel-escuro: #2bbbad;
-    --nude-pastel: #ffffff;
-    --rosa-pastel: #f2dcdc;
+    --primary: #2bbbad;
+    --primary-light: #e0f7f5;
+    --card: #ffffff;
+    --text: #333;
 }
 
 body {
-    background: #dff3f1;
+    background: var(--primary-light);
     font-family: sans-serif;
     margin: 0;
+    font-size: 15px;
 }
 
 header {
-    background: var(--verde-pastel);
+    background: linear-gradient(135deg, #2bbbad, #7edbd3);
+    color: white;
     text-align: center;
-    padding: 20px;
+    padding: 30px 20px;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
 }
 
 h1 {
     font-family: 'Playfair Display';
-    font-size: 22px;
+    font-size: 24px;
+    line-height: 1.4;
+    margin: 0;
 }
 
 main {
+    padding: 20px 0;
     max-width: 600px;
     margin: auto;
-    padding: 10px;
 }
 
 ul {
@@ -45,23 +51,55 @@ ul {
     list-style: none;
 }
 
-.presente-item {
-    background: #ffffff;
-    margin: 10px auto;
-    padding: 14px 16px;
-    border-radius: 12px;
+/* Categoria */
+.categoria {
+    font-weight: bold;
+    margin: 25px auto 10px auto;
     width: 90%;
+    font-size: 16px;
+    color: var(--text);
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 8px;
+}
+
+/* Item */
+.presente-item {
+    background: var(--card);
+    margin: 10px auto;
+    padding: 16px;
+    border-radius: 14px;
+    width: 90%;
     text-align: center;
     cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    position: relative;
 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     transition: all 0.2s ease;
     animation: fadeIn 0.3s ease;
 }
 
+.presente-item:active {
+    transform: scale(0.97);
+}
+
+/* Marcado */
+.presente-item.checked {
+    background: #c7ebe7;
+    color: #555;
+    text-decoration: line-through;
+}
+
+/* Check visual */
+.presente-item.checked::after {
+    content: "✔";
+    position: absolute;
+    right: 15px;
+    font-size: 16px;
+    color: var(--primary);
+}
+
+/* Animação */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -71,35 +109,6 @@ ul {
         opacity: 1;
         transform: translateY(0);
     }
-}
-
-/* Clique (celular) */
-.presente-item:active {
-    transform: scale(0.97);
-}
-
-.presente-item:active {
-    transform: scale(0.97);
-}
-
-.presente-item.checked {
-    background: #c7ebe7;
-    color: #555;
-    text-decoration: line-through;
-    transform: scale(0.98);
-    transition: all 0.3s ease;
-}
-
-.categoria {
-    font-weight: bold;
-    margin: 25px auto 10px auto;
-    width: 90%;
-    font-size: 16px;
-    color: #333;
-
-    display: flex;
-    align-items: center;
-    gap: 8px;
 }
 
 </style>
@@ -143,10 +152,7 @@ function criarItem(id, nome, marcado, categoria) {
     li.className = 'presente-item';
     if (marcado) li.classList.add('checked');
 
-    const span = document.createElement('span');
-    span.innerText = nome;
-
-    li.appendChild(span);
+    li.innerText = nome;
 
     li.addEventListener('click', async () => {
         await updateDoc(doc(db, 'presentes', id), {
