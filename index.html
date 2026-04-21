@@ -86,6 +86,21 @@ ul {
     color: var(--primary);
 }
 
+.nome-item.riscado {
+    text-decoration: line-through;
+}
+
+.presente-item.checked .nome-item {
+    text-decoration: line-through;
+}
+
+.quem-marcou {
+    display: block;
+    margin-top: 5px;
+    color: #555;
+    text-decoration: none !important;
+}
+
 /* MODAL */
 .modal {
     display: none;
@@ -144,7 +159,7 @@ ul {
     <p>Esse presente já foi escolhido por alguém 🎁<br><br>
     Se não foi você mesmo que marcou primeiro, por favor não desmarque 🙏</p>
     <button id="cancelarDesmarcar">Cancelar</button>
-    <button id="confirmarDesmarcar" class="btn-primary">Desmarcar</button>
+    <button id="confirmarDesmarcar" class="btn-primary">Fui eu, mudei de ideia</button>
   </div>
 </div>
 
@@ -198,9 +213,9 @@ function criarItem(id, nome, marcado, categoria, quem) {
     if (marcado) li.classList.add('checked');
 
     li.innerHTML = `
-        <div>${nome}</div>
-        ${quem ? `<small style="display:block;margin-top:5px;">Marcado por ${quem}</small>` : ""}
-    `;
+    <div class="nome-item">${nome}</div>
+    ${quem ? `<small class="quem-marcou">Marcado por ${quem}</small>` : ""}
+`;
 
     li.addEventListener('click', () => {
         docSelecionado = doc(db, 'presentes', id);
