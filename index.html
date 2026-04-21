@@ -35,7 +35,6 @@ header {
 h1 {
     font-family: 'Playfair Display';
     font-size: 24px;
-    line-height: 1.4;
     margin: 0;
 }
 
@@ -51,19 +50,12 @@ ul {
     list-style: none;
 }
 
-/* Categoria */
 .categoria {
     font-weight: bold;
     margin: 25px auto 10px auto;
     width: 90%;
-    font-size: 16px;
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    gap: 8px;
 }
 
-/* Item */
 .presente-item {
     background: var(--card);
     margin: 10px auto;
@@ -73,7 +65,6 @@ ul {
     text-align: center;
     cursor: pointer;
     position: relative;
-
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     transition: all 0.2s ease;
 }
@@ -82,36 +73,55 @@ ul {
     transform: scale(0.97);
 }
 
-/* Marcado */
 .presente-item.checked {
     background: #c7ebe7;
     color: #555;
     text-decoration: line-through;
 }
 
-/* Check visual */
 .presente-item.checked::after {
     content: "✔";
     position: absolute;
     right: 15px;
-    font-size: 16px;
     color: var(--primary);
 }
 
-.presente-item.clicked {
-    transform: scale(0.97);
+/* MODAL */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    justify-content: center;
+    align-items: center;
 }
 
-/* Animação */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(5px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 14px;
+    width: 85%;
+    max-width: 320px;
+    text-align: center;
+    animation: zoomIn 0.2s ease;
+}
+
+@keyframes zoomIn {
+    from { opacity: 0; transform: scale(0.9);}
+    to { opacity: 1; transform: scale(1);}
+}
+
+.modal button {
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    margin: 5px;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
 }
 
 </style>
@@ -127,14 +137,43 @@ ul {
 <ul id="lista-presentes"></ul>
 </main>
 
+<!-- MODAIS -->
+
+<div id="modalDesmarcar" class="modal">
+  <div class="modal-content">
+    <p>Esse presente já foi escolhido 🎁<br><br>
+    Se não foi você que marcou, por favor não desmarque 🙏</p>
+    <button id="cancelarDesmarcar">Cancelar</button>
+    <button id="confirmarDesmarcar" class="btn-primary">Desmarcar</button>
+  </div>
+</div>
+
+<div id="modalConfirmar" class="modal">
+  <div class="modal-content">
+    <p id="textoConfirmar"></p>
+    <button id="cancelarConfirmar">Cancelar</button>
+    <button id="confirmarSim" class="btn-primary">Sim</button>
+  </div>
+</div>
+
+<div id="modalNome" class="modal">
+  <div class="modal-content">
+    <p>Quer se identificar? 😊</p>
+    <input id="inputNome" placeholder="Seu nome"
+      style="width:100%; padding:8px; margin:10px 0; border-radius:8px; border:1px solid #ccc;" />
+    <button id="naoIdentificar">Não quero me identificar</button>
+    <button id="confirmarNome" class="btn-primary">Confirmar</button>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
 import { getFirestore, collection, onSnapshot, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyB0FNd2sdqLARe3HfdFNv5yhQpIN9AQZNI",
-    authDomain: "lista-presentes-casament-a314f.firebaseapp.com",
-    projectId: "lista-presentes-casament-a314f"
+    apiKey: "SUA_API",
+    authDomain: "SEU_DOMINIO",
+    projectId: "SEU_PROJETO"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -142,7 +181,10 @@ const db = getFirestore(app);
 
 const lista = document.getElementById('lista-presentes');
 
-function criarItem(id, nome, marcado, categoria) {
+let docSelecionado = null;
+let nomeAtual = "";
+
+function criarItem(id, nome, marcado, categoria, quem) {
 
     if (categoria) {
         const li = document.createElement('li');
@@ -155,31 +197,63 @@ function criarItem(id, nome, marcado, categoria) {
     li.className = 'presente-item';
     if (marcado) li.classList.add('checked');
 
-    li.innerText = nome;
+    li.innerHTML = `
+        <div>${nome}</div>
+        ${quem ? `<small style="display:block;margin-top:5px;">Marcado por ${quem}</small>` : ""}
+    `;
 
-    li.addEventListener('click', async () => {
-    li.classList.add('clicked');
+    li.addEventListener('click', () => {
+        docSelecionado = doc(db, 'presentes', id);
+        nomeAtual = nome;
 
-    setTimeout(() => {
-        li.classList.remove('clicked');
-    }, 150);
-
-    await updateDoc(doc(db, 'presentes', id), {
-        marcado: !marcado
+        if (marcado) {
+            modalDesmarcar.style.display = "flex";
+        } else {
+            textoConfirmar.innerText =
+                `Tem certeza que quer nos presentear com "${nome}"?`;
+            modalConfirmar.style.display = "flex";
+        }
     });
-});
 
     return li;
 }
 
 onSnapshot(query(collection(db, 'presentes'), orderBy('ordem')), (snapshot) => {
     lista.innerHTML = '';
-
     snapshot.forEach(docSnap => {
         const d = docSnap.data();
-        lista.appendChild(criarItem(docSnap.id, d.nome, d.marcado, d.categoria));
+        lista.appendChild(criarItem(docSnap.id, d.nome, d.marcado, d.categoria, d.quem));
     });
 });
+
+/* DESMARCAR */
+cancelarDesmarcar.onclick = () => modalDesmarcar.style.display = "none";
+
+confirmarDesmarcar.onclick = async () => {
+    await updateDoc(docSelecionado, { marcado: false, quem: "" });
+    modalDesmarcar.style.display = "none";
+};
+
+/* CONFIRMAR */
+cancelarConfirmar.onclick = () => modalConfirmar.style.display = "none";
+
+confirmarSim.onclick = () => {
+    modalConfirmar.style.display = "none";
+    modalNome.style.display = "flex";
+};
+
+/* NOME */
+naoIdentificar.onclick = async () => {
+    await updateDoc(docSelecionado, { marcado: true, quem: "" });
+    modalNome.style.display = "none";
+};
+
+confirmarNome.onclick = async () => {
+    const nome = document.getElementById('inputNome').value;
+    await updateDoc(docSelecionado, { marcado: true, quem: nome });
+    modalNome.style.display = "none";
+};
+
 </script>
 
 </body>
