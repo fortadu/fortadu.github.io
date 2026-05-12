@@ -281,6 +281,142 @@ confirmarNome.onclick = async () => {
     modalNome.style.display = "none";
 };
 
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB0FNd2sdqLARe3HfdFNv5yhQpIN9AQZNI",
+  authDomain: "lista-presentes-casament-a314f.firebaseapp.com",
+  projectId: "lista-presentes-casament-a314f"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const itensPorCategoria = {
+  "Banheiro": [
+    "Tapete de box",
+    "Porta shampoo de metal",
+    "Ganchos de toalha"
+  ],
+
+  "Cozinha": [
+    "Boleira",
+    "Tampa de microondas",
+    "Tela protetora para alimentos",
+    "Bandeja com pés",
+    "Porta pão",
+    "Cabide para pano de louça",
+    "Espremedor de batata",
+    "Espremedor de limão",
+    "Colher de sorvete",
+    "Afiador de facas",
+    "Esponja de silicone",
+    "Fuê/batedor",
+    "Assadeira para pizza"
+  ],
+
+  "Cama, Mesa e Banho": [
+    "Cabide de porta",
+    "Relógio de parede"
+  ],
+
+  "Área de Serviço": [
+    "Suporte para prendedor de roupas"
+  ]
+};
+
+async function adicionarItensNasCategorias() {
+  const snapshot = await getDocs(collection(db, "presentes"));
+
+  const docs = [];
+  const nomesExistentes = new Set();
+
+  snapshot.forEach(docSnap => {
+    const dados = docSnap.data();
+
+    docs.push({
+      nome: dados.nome,
+      categoria: dados.categoria,
+      ordem: dados.ordem || 0
+    });
+
+    nomesExistentes.add(dados.nome.trim().toLowerCase());
+  });
+
+  // Ordena pela ordem atual
+  docs.sort((a, b) => a.ordem - b.ordem);
+
+  // Encontra a ordem de cada cabeçalho de categoria
+  const ordemCategoria = {};
+
+  docs.forEach(item => {
+    if (item.categoria) {
+      ordemCategoria[item.nome] = item.ordem;
+    }
+  });
+
+  // Monta lista dos novos itens com ordem logo após cada categoria
+  const novosItens = [];
+
+  for (const [categoria, itens] of Object.entries(itensPorCategoria)) {
+    const ordemBase = ordemCategoria[categoria];
+
+    if (ordemBase === undefined) {
+      console.warn(`Categoria "${categoria}" não encontrada.`);
+      continue;
+    }
+
+    let contador = 1;
+
+    for (const nome of itens) {
+      const chave = nome.trim().toLowerCase();
+
+      // Evita duplicar itens já existentes
+      if (nomesExistentes.has(chave)) {
+        console.log(`Já existe: ${nome}`);
+        continue;
+      }
+
+      novosItens.push({
+        nome,
+        categoria: false,
+        marcado: false,
+        quem: "",
+        ordem: ordemBase + contador * 0.01
+      });
+
+      contador++;
+      nomesExistentes.add(chave);
+    }
+  }
+
+  // Ordena os novos itens
+  novosItens.sort((a, b) => a.ordem - b.ordem);
+
+  // Adiciona ao Firebase sem alterar os documentos já existentes
+  for (const item of novosItens) {
+    await addDoc(collection(db, "presentes"), {
+      nome: item.nome,
+      categoria: item.categoria,
+      marcado: item.marcado,
+      quem: item.quem,
+      ordem: item.ordem
+    });
+
+    console.log("Adicionado:", item.nome);
+  }
+
+  console.log("Todos os novos itens foram adicionados com sucesso!");
+}
+
+adicionarItensNasCategorias();
+
 </script>
 
 </body>
