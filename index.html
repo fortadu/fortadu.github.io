@@ -292,13 +292,13 @@ confirmarNome.onclick = async () => {
 };
 
 const itensPorCategoria = {
-  "Banheiro": [
+  "banheiro": [
     "Tapete de box",
     "Porta shampoo de metal",
     "Ganchos de toalha"
   ],
 
-  "Cozinha": [
+  "cozinha": [
     "Boleira",
     "Tampa de microondas",
     "Tela protetora para alimentos",
@@ -314,15 +314,25 @@ const itensPorCategoria = {
     "Assadeira para pizza"
   ],
 
-  "Cama, Mesa e Banho": [
+  "cama mesa e banho": [
     "Cabide de porta",
     "Relógio de parede"
   ],
 
-  "Área de Serviço": [
+  "area de servico": [
     "Suporte para prendedor de roupas"
   ]
 };
+
+function normalizar(texto) {
+  return texto
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 async function adicionarItensNasCategorias() {
   const snapshot = await getDocs(collection(db, "presentes"));
@@ -336,19 +346,22 @@ async function adicionarItensNasCategorias() {
     docs.push({
       nome: dados.nome,
       categoria: dados.categoria,
-      ordem: dados.ordem || 0
+      ordem: Number(dados.ordem || 0)
     });
 
-    nomesExistentes.add(dados.nome.trim().toLowerCase());
+    if (dados.nome) {
+      nomesExistentes.add(normalizar(dados.nome));
+    }
   });
 
   docs.sort((a, b) => a.ordem - b.ordem);
 
+  // Mapeia as categorias existentes
   const ordemCategoria = {};
 
   docs.forEach(item => {
     if (item.categoria) {
-      ordemCategoria[item.nome] = item.ordem;
+      ordemCategoria[normalizar(item.nome)] = item.ordem;
     }
   });
 
@@ -358,16 +371,16 @@ async function adicionarItensNasCategorias() {
     const ordemBase = ordemCategoria[categoria];
 
     if (ordemBase === undefined) {
-      console.warn(`Categoria "${categoria}" não encontrada.`);
+      console.warn("Categoria não encontrada:", categoria);
       continue;
     }
 
     let contador = 1;
 
     for (const nome of itens) {
-      const chave = nome.trim().toLowerCase();
+      const nomeNormalizado = normalizar(nome);
 
-      if (nomesExistentes.has(chave)) {
+      if (nomesExistentes.has(nomeNormalizado)) {
         continue;
       }
 
@@ -380,8 +393,13 @@ async function adicionarItensNasCategorias() {
       });
 
       contador++;
-      nomesExistentes.add(chave);
+      nomesExistentes.add(nomeNormalizado);
     }
+  }
+
+  if (novosItens.length === 0) {
+    console.log("Nenhum item novo para adicionar.");
+    return;
   }
 
   for (const item of novosItens) {
@@ -389,10 +407,10 @@ async function adicionarItensNasCategorias() {
     console.log("Adicionado:", item.nome);
   }
 
-  console.log("Todos os itens foram adicionados com sucesso!");
+  console.log(`${novosItens.length} itens adicionados com sucesso!`);
 }
 
-// Execute apenas uma vez
+// Executar apenas uma vez
 adicionarItensNasCategorias();
 
 </script>
